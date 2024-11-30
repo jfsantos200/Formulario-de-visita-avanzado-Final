@@ -150,7 +150,7 @@ Puedes modificar la variable JWT_SECRET en el archivo .env por una cadena más s
 En caso de problemas, verifica que los valores de las variables de entorno en el archivo .env estén correctamente configurados.
 
 LIBRERIAS Y DEPENDENCIAS UTILIZADAS EN EL PROYECTO:
-instalar todas las librerías y dependencias mencionadas en esta conversación:
+instalar todas las librerías y dependencias mencionadas en esta aplicacion:
 
 Express: Framework web para Node.js.
 
