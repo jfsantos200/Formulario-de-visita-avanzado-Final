@@ -148,3 +148,53 @@ Los archivos PDF adjuntos en las cotizaciones se guardan en la carpeta uploads/.
 Asegúrate de que PostgreSQL esté corriendo antes de iniciar la aplicación.
 Puedes modificar la variable JWT_SECRET en el archivo .env por una cadena más segura.
 En caso de problemas, verifica que los valores de las variables de entorno en el archivo .env estén correctamente configurados.
+
+LIBRERIAS Y DEPENDENCIAS UTILIZADAS EN EL PROYECTO:
+instalar todas las librerías y dependencias mencionadas en esta conversación:
+
+Express: Framework web para Node.js.
+
+npm install express
+pg: Cliente de PostgreSQL para Node.js.
+
+npm install pg
+multer: Middleware para manejar la carga de archivos en Node.js.
+
+npm install multer
+cors: Middleware para habilitar CORS (Cross-Origin Resource Sharing).
+
+npm install cors
+dotenv: Cargar variables de entorno desde un archivo .env.
+
+npm install dotenv
+node-fetch: Cliente HTTP para realizar solicitudes HTTP.
+
+npm install node-fetch
+
+Si aún no has inicializado un proyecto Node.js, puedes hacerlo con el siguiente comando:
+
+npm init -y
+
+2. Instalar Express
+Express es un framework web para Node.js. Instálalo con el siguiente comando:
+
+npm install express
+
+3. Instalar Sequelize y PostgreSQL
+Sequelize es un ORM (Object-Relational Mapping) para Node.js, y pg y pg-hstore son los paquetes necesarios para conectar Sequelize con PostgreSQL.
+
+npm install sequelize pg pg-hstore
+
+4. Instalar Body-Parser
+Body-Parser es un middleware para analizar cuerpos de solicitudes entrantes en un servidor Express.
+
+npm install body-parser
+
+5. Instalar Dotenv (Opcional)
+Si deseas manejar variables de entorno de manera más segura, puedes instalar dotenv:
+
+npm install dotenv
+Si prefieres instalar todas las dependencias en un solo comando, puedes usar:
+
+npm install express pg multer cors dotenv node-fetch
+
