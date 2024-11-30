@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Visitas - A4 Soluciones Corporativas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">
+        <img src="a4.png" alt="Logo A4 Soluciones Corporativas">
+      </div>
+      <div class="menu">
+        <a href="index.html">Inicio</a>
+        <a href="cotizaciones.html">Cotizaciones</a>
+        <a href="clientes.html">Clientes</a>
+        <a href="visitas.html" class="active">Visitas</a>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Registro de Visitas</h1>
+  </header>
+
+  <section>
+    <h2>Registrar Visita</h2>
+    <form id="visitForm">
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" name="nombre" required>
+
+      <label for="apellido">Apellido:</label>
+      <input type="text" id="apellido" name="apellido" required>
+
+      <label for="fecha">Fecha de Visita:</label>
+      <input type="date" id="fecha" name="fecha" required>
+
+      <label for="motivo">Motivo de la Visita:</label>
+      <textarea id="motivo" name="motivo" required></textarea>
+
+      <button type="submit">Registrar Visita</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Lista de Visitas</h2>
+    <table id="visitasTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Fecha</th>
+          <th>Motivo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Lista dinámica de visitas -->
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    const visitasTable = document.getElementById('visitasTable').querySelector('tbody');
+
+    fetch('/api/visitas')
+      .then(response => response.json())
+      .then(visitas => {
+        visitas.forEach(visita => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${visita.id}</td>
+            <td>${visita.nombre}</td>
+            <td>${visita.apellido}</td>
+            <td>${visita.fecha}</td>
+            <td>${visita.motivo}</td>
+            <td><button onclick="deleteVisita(${visita.id})">Eliminar</button></td>
+          `;
+          visitasTable.appendChild(row);
+        });
+      });
+
+    document.getElementById('visitForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const nuevaVisita = {
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        fecha: document.getElementById('fecha').value,
+        motivo: document.getElementById('motivo').value
+      };
+
+      fetch('/api/visitas', {
+        method: 'POST',
+        body: JSON.stringify(nuevaVisita),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload(); // Recargar la lista de visitas
+        } else {
+          alert('Error al registrar la visita.');
+        }
+      });
+    });
+
+    function deleteVisita(id) {
+      if (confirm(`¿Estás seguro de que deseas eliminar la visita con ID ${id}?`)) {
+        fetch(`/api/visitas/${id}`, { method: 'DELETE' })
+          .then(() => location.reload())
+          .catch(error => console.error('Error al eliminar la visita:', error));
+      }
+    }
+  </script>
+</body>
+</html>

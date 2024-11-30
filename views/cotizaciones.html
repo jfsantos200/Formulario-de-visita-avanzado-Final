@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Cotizaciones - A4 Soluciones Corporativas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">
+        <img src="a4.png" alt="Logo">
+      </div>
+      <div class="menu">
+        <a href="index.html">Inicio</a>
+        <a href="cotizaciones.html" class="active">Cotizaciones</a>
+        <a href="clientes.html">Clientes</a>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Gestión de Cotizaciones</h1>
+  </header>
+
+  <!-- Formulario de Envío de Cotizaciones -->
+  <section>
+    <h2>Enviar Cotización</h2>
+    <form id="cotizacionForm" enctype="multipart/form-data">
+      <label for="clienteEnvio">Cliente:</label>
+      <select id="clienteEnvio" name="clienteEnvio" required>
+        <option value="">Selecciona un Cliente</option>
+      </select>
+
+      <label for="productoEnvio">Producto/Servicio:</label>
+      <input type="text" id="productoEnvio" name="productoEnvio" required>
+
+      <label for="cantidadEnvio">Cantidad:</label>
+      <input type="number" id="cantidadEnvio" name="cantidadEnvio" required>
+
+      <label for="precioEnvio">Precio Unitario:</label>
+      <input type="number" id="precioEnvio" name="precioEnvio" required>
+
+      <label for="fechaEntrega">Fecha de Entrega:</label>
+      <input type="date" id="fechaEntrega" name="fechaEntrega" required>
+
+      <label for="correoCliente">Correo del Cliente:</label>
+      <input type="email" id="correoCliente" name="correoCliente" required>
+
+      <label for="pdfAdjunto">Adjuntar PDF:</label>
+      <input type="file" id="pdfAdjunto" name="pdfAdjunto">
+
+      <button type="submit">Enviar Cotización</button>
+    </form>
+    
+    <div id="responseMessage"></div>
+  </section>
+
+  <!-- Tabla de Cotizaciones -->
+  <section>
+    <h2>Lista de Cotizaciones</h2>
+    <table id="cotizacionesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Precio Unitario</th>
+          <th>Fecha de Entrega</th>
+          <th>Correo Cliente</th>
+          <th>PDF Adjunto</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Lista dinámica de cotizaciones -->
+      </tbody>
+    </table>
+  </section>
+
+  
+ <script>
+  // Cargar la lista de clientes en el formulario
+  fetch('/api/clientes')
+    .then(response => response.json())
+    .then(clientes => {
+      const clienteSelect = document.getElementById('clienteEnvio');
+      clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.text = cliente.empresa;
+        clienteSelect.add(option);
+      });
+    });
+
+  // Manejar el envío del formulario para enviar una cotización
+  const form = document.getElementById('cotizacionForm');
+  const responseMessage = document.getElementById('responseMessage');
+  let editMode = false;
+  let editId = null;
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    // Crear un nuevo FormData para manejar el envío del archivo PDF y otros campos
+    const formData = new FormData(form);
+
+    const url = editMode ? `/api/quotes/${editId}` : '/api/quotes';
+    const method = editMode ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method,
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        responseMessage.innerHTML = `<p>Cotización ${editMode ? 'actualizada' : 'enviada'} con éxito.</p>`;
+        form.reset();
+        editMode = false; // Restablecer modo de edición
+        editId = null;
+        cargarCotizaciones(); // Recargar la lista de cotizaciones
+      } else {
+        responseMessage.innerHTML = `<p>Error al ${editMode ? 'actualizar' : 'enviar'} la cotización: ${data.error}</p>`;
+      }
+    })
+    .catch(error => {
+      responseMessage.innerHTML = `<p>Error al ${editMode ? 'actualizar' : 'enviar'} la cotización.</p>`;
+      console.error('Error:', error);
+    });
+  });
+
+  // Función para cargar la lista de cotizaciones
+  function cargarCotizaciones() {
+    fetch('/api/quotes')
+      .then(response => response.json())
+      .then(cotizaciones => {
+        const cotizacionesTable = document.getElementById('cotizacionesTable').getElementsByTagName('tbody')[0];
+        cotizacionesTable.innerHTML = ''; // Limpiar la tabla antes de cargar los datos
+
+        cotizaciones.forEach(cotizacion => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${cotizacion.id}</td>
+            <td>${cotizacion.cliente_nombre}</td>
+            <td>${cotizacion.producto}</td>
+            <td>${cotizacion.cantidad}</td>
+            <td>${cotizacion.precio_unitario}</td>
+            <td>${cotizacion.fecha_entrega}</td>
+            <td>${cotizacion.correo_cliente}</td>
+            <td>${cotizacion.pdf_adjunto ? `<a href="${cotizacion.pdf_adjunto}" target="_blank">Ver PDF</a>` : 'No adjunto'}</td>
+            <td>
+              <button class="editar-btn" data-id="${cotizacion.id}">Editar</button>
+              <button class="eliminar-btn" data-id="${cotizacion.id}">Eliminar</button>
+            </td>
+          `;
+          cotizacionesTable.appendChild(row);
+        });
+
+        // Añadir los manejadores de eventos para los botones de editar y eliminar
+        const editarBtns = document.querySelectorAll('.editar-btn');
+        const eliminarBtns = document.querySelectorAll('.eliminar-btn');
+
+        editarBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            editarCotizacion(this.dataset.id);
+          });
+        });
+
+        eliminarBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            eliminarCotizacion(this.dataset.id);
+          });
+        });
+      });
+  }
+
+  // Función para editar una cotización
+  function editarCotizacion(id) {
+    fetch(`/api/quotes/${id}`)
+      .then(response => response.json())
+      .then(cotizacion => {
+        // Cargar los datos de la cotización en el formulario
+        document.getElementById('clienteEnvio').value = cotizacion.cliente_id;
+        document.getElementById('productoEnvio').value = cotizacion.producto;
+        document.getElementById('cantidadEnvio').value = cotizacion.cantidad;
+        document.getElementById('precioEnvio').value = cotizacion.precio_unitario;
+        document.getElementById('fechaEntrega').value = cotizacion.fecha_entrega;
+        document.getElementById('correoCliente').value = cotizacion.correo_cliente;
+
+        // Cambiar a modo edición
+        editMode = true;
+        editId = id;
+      })
+      .catch(error => {
+        console.error('Error al cargar los datos de la cotización:', error);
+      });
+  }
+
+  // Función para eliminar una cotización
+  function eliminarCotizacion(id) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta cotización?')) {
+      fetch(`/api/quotes/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            cargarCotizaciones(); // Recargar la lista de cotizaciones
+          } else {
+            responseMessage.innerHTML = '<p>Error al eliminar la cotización.</p>';
+          }
+        })
+        .catch(error => {
+          responseMessage.innerHTML = '<p>Error al eliminar la cotización.</p>';
+        });
+    }
+  }
+
+  // Cargar las cotizaciones al iniciar
+  cargarCotizaciones();
+</script>
+
+</body>
+</html>

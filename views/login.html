@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - A4 Soluciones Corporativas</title>
+    <link rel="stylesheet" href="css/login.css"> 
+</head>
+<body>
+    <div class="login-container" id="login-container">
+        <div class="logo">
+            <img src="a4.png" alt="Logo A4 Soluciones Corporativas">
+        </div>
+        <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        // Función para manejar el inicio de sesión
+        // Función para manejar el inicio de sesión
+loginForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    console.log("Enviando datos de login", { username, password }); // Para verificar que se envían correctamente
+
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Respuesta del login:", data);  // Verifica la respuesta
+
+        if (data.message === 'Login successful') {
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('username', username);
+            localStorage.setItem('role', data.user.role);  // Guardar el rol del usuario
+            localStorage.setItem('token', data.token);  // Guardar el token
+            alert('Inicio de sesión exitoso. Bienvenido ' + data.user.full_name + '!');
+            window.location.href = 'index.html'; // Redirigir al index
+        } else {
+            alert('Usuario o contraseña incorrectos.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+    </script>
+</body>
+</html>

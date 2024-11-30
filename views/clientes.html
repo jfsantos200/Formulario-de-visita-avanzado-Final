@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Clientes - A4 Soluciones Corporativas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">
+        <img src="a4.png" alt="Logo">
+      </div>
+      <div class="menu">
+        <a href="index.html">Inicio</a>
+        <a href="cotizaciones.html">Cotizaciones</a>
+        <a href="clientes.html" class="active">Clientes</a>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Gestión de Clientes</h1>
+  </header>
+
+  <!-- Formulario de Registro de Clientes -->
+  <section>
+    <h2>Registrar Cliente</h2>
+    <form id="clienteForm">
+      <label for="empresa">Empresa:</label>
+      <input type="text" id="empresa" name="empresa" required>
+
+      <label for="rnc">RNC:</label>
+      <input type="text" id="rnc" name="rnc" required>
+
+      <label for="rubro">Rubro:</label>
+      <input type="text" id="rubro" name="rubro" required>
+
+      <label for="telefono">Teléfono:</label>
+      <input type="text" id="telefono" name="telefono" required>
+
+      <label for="direccion">Dirección:</label>
+      <input type="text" id="direccion" name="direccion" required>
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+
+      <button type="submit">Registrar Cliente</button>
+    </form>
+    
+    <div id="responseMessage"></div>
+  </section>
+
+  <!-- Tabla de Clientes -->
+  <section>
+    <h2>Lista de Clientes</h2>
+    <table id="clientesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Empresa</th>
+          <th>RNC</th>
+          <th>Rubro</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+          <th>Email</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Lista dinámica de clientes -->
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    // Cargar la lista de clientes
+    function cargarClientes() {
+      fetch('/api/clientes')
+        .then(response => response.json())
+        .then(clientes => {
+          const clientesTable = document.getElementById('clientesTable').getElementsByTagName('tbody')[0];
+          clientesTable.innerHTML = ''; // Limpiar la tabla antes de cargar los datos
+          
+          clientes.forEach(cliente => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${cliente.id}</td>
+              <td>${cliente.empresa}</td>
+              <td>${cliente.rnc}</td>
+              <td>${cliente.rubro}</td>
+              <td>${cliente.telefono}</td>
+              <td>${cliente.direccion}</td>
+              <td>${cliente.email}</td>
+              <td>
+                <button onclick="editarCliente(${cliente.id})">Editar</button>
+                <button onclick="eliminarCliente(${cliente.id})">Eliminar</button>
+              </td>
+            `;
+            clientesTable.appendChild(row);
+          });
+        });
+    }
+
+    // Función para enviar el formulario
+    const form = document.getElementById('clienteForm');
+    const responseMessage = document.getElementById('responseMessage');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const cliente = {
+        empresa: document.getElementById('empresa').value,
+        rnc: document.getElementById('rnc').value,
+        rubro: document.getElementById('rubro').value,
+        telefono: document.getElementById('telefono').value,
+        direccion: document.getElementById('direccion').value,
+        email: document.getElementById('email').value
+      };
+
+      fetch('/api/clientes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cliente)
+      })
+      .then(response => response.json())
+      .then(data => {
+        responseMessage.innerHTML = '<p>Cliente registrado con éxito.</p>';
+        form.reset();
+        cargarClientes(); // Recargar la lista de clientes
+      })
+      .catch(error => {
+        responseMessage.innerHTML = '<p>Error al registrar el cliente.</p>';
+      });
+    });
+
+    // Función para editar cliente
+    function editarCliente(id) {
+      fetch(`/api/clientes/${id}`)
+        .then(response => response.json())
+        .then(cliente => {
+          document.getElementById('empresa').value = cliente.empresa;
+          document.getElementById('rnc').value = cliente.rnc;
+          document.getElementById('rubro').value = cliente.rubro;
+          document.getElementById('telefono').value = cliente.telefono;
+          document.getElementById('direccion').value = cliente.direccion;
+          document.getElementById('email').value = cliente.email;
+
+          form.onsubmit = function(event) {
+            event.preventDefault();
+            actualizarCliente(id);
+          };
+        })
+        .catch(error => {
+          console.error('Error al cargar los datos del cliente:', error);
+        });
+    }
+
+    // Función para actualizar cliente
+    function actualizarCliente(id) {
+      const cliente = {
+        empresa: document.getElementById('empresa').value,
+        rnc: document.getElementById('rnc').value,
+        rubro: document.getElementById('rubro').value,
+        telefono: document.getElementById('telefono').value,
+        direccion: document.getElementById('direccion').value,
+        email: document.getElementById('email').value
+      };
+
+      fetch(`/api/clientes/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cliente)
+      })
+      .then(response => response.json())
+      .then(data => {
+        responseMessage.innerHTML = '<p>Cliente actualizado con éxito.</p>';
+        form.reset();
+        cargarClientes(); // Recargar la lista de clientes
+      })
+      .catch(error => {
+        responseMessage.innerHTML = '<p>Error al actualizar el cliente.</p>';
+      });
+    }
+
+    // Función para eliminar cliente
+    function eliminarCliente(id) {
+      if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
+        fetch(`/api/clientes/${id}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            cargarClientes(); // Recargar la lista de clientes
+          })
+          .catch(error => {
+            responseMessage.innerHTML = '<p>Error al eliminar el cliente.</p>';
+          });
+      }
+    }
+
+    // Cargar los clientes al iniciar
+    cargarClientes();
+  </script>
+</body>
+</html>

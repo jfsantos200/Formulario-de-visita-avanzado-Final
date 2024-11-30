@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios - A4 Soluciones Corporativas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">
+        <img src="a4.png" alt="Logo A4 Soluciones Corporativas">
+      </div>
+      <div class="menu">
+        <a href="index.html">Inicio</a>
+        <a href="cotizaciones.html">Cotizaciones</a>
+        <a href="clientes.html">Clientes</a>
+        <a href="usuarios.html" class="active">Usuarios</a>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Gestión de Usuarios</h1>
+  </header>
+
+  <section>
+    <h2>Lista de Usuarios</h2>
+    <table id="userList">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Nombre Completo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Lista dinámica de usuarios -->
+      </tbody>
+    </table>
+    <button id="createUserBtn">Crear Usuario</button>
+
+    <div id="createUserFormContainer" class="hidden">
+      <h2>Crear Usuario</h2>
+      <form id="createUserForm">
+        <label for="newFullName">Nombre Completo:</label>
+        <input type="text" id="newFullName" required>
+
+        <label for="newUsername">Nombre de Usuario:</label>
+        <input type="text" id="newUsername" required>
+
+        <label for="newPassword">Contraseña:</label>
+        <input type="password" id="newPassword" required>
+
+        <label for="newRole">Rol:</label>
+        <select id="newRole" required>
+          <option value="vendedor">Vendedor</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <button type="submit">Crear</button>
+        <button id="cancelCreateUserBtn">Cancelar</button>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    const userList = document.getElementById('userList').querySelector('tbody');
+    const createUserFormContainer = document.getElementById('createUserFormContainer');
+
+    fetch('/api/usuarios', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Enviar el token JWT
+      }
+    })
+      .then(response => response.json())
+      .then(usuarios => {
+        userList.innerHTML = '';
+        usuarios.forEach(usuario => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${usuario.username}</td>
+            <td>${usuario.full_name}</td>
+            <td>
+              <button onclick="editUser('${usuario.username}')">Editar</button>
+              <button onclick="deleteUser('${usuario.username}')">Eliminar</button>
+            </td>
+          `;
+          userList.appendChild(row);
+        });
+      });
+
+    document.getElementById('createUserBtn').addEventListener('click', () => {
+      createUserFormContainer.classList.remove('hidden');
+    });
+
+    document.getElementById('cancelCreateUserBtn').addEventListener('click', () => {
+      createUserFormContainer.classList.add('hidden');
+    });
+
+    document.getElementById('createUserForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const newUser = {
+        full_name: document.getElementById('newFullName').value,
+        username: document.getElementById('newUsername').value,
+        password: document.getElementById('newPassword').value,
+        role: document.getElementById('newRole').value  // Aquí se recoge el rol
+      };
+
+      fetch('/api/usuarios', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`  // Enviar el token JWT
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload(); // Recargar la lista de usuarios
+        } else {
+          alert('Error al crear el usuario.');
+        }
+      });
+    });
+
+    function deleteUser(username) {
+      if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${username}?`)) {
+        fetch(`/api/usuarios/${username}`, { 
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+          .then(() => location.reload())
+          .catch(error => console.error('Error al eliminar el usuario:', error));
+      }
+    }
+
+    function editUser(username) {
+      // Lógica para editar el usuario 
+    }
+  </script>
+</body>
+</html>
+
